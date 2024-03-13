@@ -1,0 +1,105 @@
+import java.util.*;
+
+class TrieNode {
+    Map<Character, TrieNode> children;
+    boolean isEndOfWord;
+
+    public TrieNode() {
+        children = new HashMap<>();
+        isEndOfWord = false;
+    }
+}
+
+public class WordCountApplication {
+    public static void main(String[] args) {
+        // External sorting and merging
+
+        // Word counting
+        Map<String, Integer> wordCounts = new HashMap<>();
+        String currentWord;
+
+        // Fuzzy search
+        TrieNode root = new TrieNode();
+
+        // Process each chunk
+        while (hasNextChunk()) {
+            String[] chunk = getNextChunk();
+
+            // Sort the chunk
+            Arrays.sort(chunk);
+
+            // Count words and insert into trie
+            for (String word : chunk) {
+                currentWord = correctSpelling(word);
+                wordCounts.put(currentWord, wordCounts.getOrDefault(currentWord, 0) + 1);
+                insertIntoTrie(root, currentWord);
+            }
+        }
+
+        // Output sorted words with counts
+        List<Map.Entry<String, Integer>> sortedWordCounts = new ArrayList<>(wordCounts.entrySet());
+        Collections.sort(sortedWordCounts, (a, b) -> b.getValue().compareTo(a.getValue()));
+
+        for (Map.Entry<String, Integer> entry : sortedWordCounts) {
+            System.out.println(entry.getKey() + ": " + entry.getValue());
+        }
+
+        // Fuzzy search example
+        String query = "spellling";
+        List<String> suggestions = fuzzySearch(root, query);
+        System.out.println("Suggestions for '" + query + "': " + suggestions);
+    }
+
+    // Check if there is another chunk available
+    static boolean hasNextChunk() {
+        // Implementation
+        return true;
+    }
+
+    // Get the next chunk
+    static String[] getNextChunk() {
+        // Implementation
+        return new String[0];
+    }
+
+    // Correct spelling of a word
+    static String correctSpelling(String word) {
+        // Implementation
+        return word;
+    }
+
+    // Insert word into trie
+    static void insertIntoTrie(TrieNode root, String word) {
+        TrieNode current = root;
+        for (char ch : word.toCharArray()) {
+            current.children.putIfAbsent(ch, new TrieNode());
+            current = current.children.get(ch);
+        }
+        current.isEndOfWord = true;
+    }
+
+    // Fuzzy search in trie
+    static List<String> fuzzySearch(TrieNode root, String query) {
+        List<String> suggestions = new ArrayList<>();
+        TrieNode current = root;
+        for (char ch : query.toCharArray()) {
+            if (!current.children.containsKey(ch)) {
+                // Character not found, return empty list
+                return suggestions;
+            }
+            current = current.children.get(ch);
+        }
+        // Traverse trie to find suggestions
+        findSuggestions(current, query, suggestions);
+        return suggestions;
+    }
+
+    static void findSuggestions(TrieNode node, String prefix, List<String> suggestions) {
+        if (node.isEndOfWord) {
+            suggestions.add(prefix);
+        }
+        for (Map.Entry<Character, TrieNode> entry : node.children.entrySet()) {
+            findSuggestions(entry.getValue(), prefix + entry.getKey(), suggestions);
+        }
+    }
+}
