@@ -1,0 +1,118 @@
+import java.util.*;
+
+// Product class
+class Product {
+    private String id;
+    private String name;
+    private String description;
+    private double price;
+    private List<String> categories;
+
+    public Product(String id, String name, String description, double price, List<String> categories) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.price = price;
+        this.categories = categories;
+    }
+
+    // Getters and setters
+    // ...
+
+    @Override
+    public String toString() {
+        return "Product{" +
+                "id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", price=" + price +
+                ", categories=" + categories +
+                '}';
+    }
+}
+
+// In-memory database class
+class ProductDatabase {
+    private Map<String, Product> products;
+    private Map<String, List<Product>> categoryIndex;
+    private Map<String, Set<String>> keywordIndex;
+
+    public ProductDatabase() {
+        products = new HashMap<>();
+        categoryIndex = new HashMap<>();
+        keywordIndex = new HashMap<>();
+    }
+
+    // Add a product to the database
+    public void addProduct(Product product) {
+        products.put(product.getId(), product);
+        for (String category : product.getCategories()) {
+            categoryIndex.computeIfAbsent(category, k -> new ArrayList<>()).add(product);
+        }
+        indexKeywords(product);
+    }
+
+    // Search products by category
+    public List<Product> searchByCategory(String category) {
+        return categoryIndex.getOrDefault(category, Collections.emptyList());
+    }
+
+    // Textual search
+    public List<Product> searchByText(String query) {
+        List<Product> results = new ArrayList<>();
+        Set<String> keywords = extractKeywords(query);
+        for (String keyword : keywords) {
+            if (keywordIndex.containsKey(keyword)) {
+                for (String productId : keywordIndex.get(keyword)) {
+                    results.add(products.get(productId));
+                }
+            }
+        }
+        return results;
+    }
+
+    // Extract keywords from query
+    private Set<String> extractKeywords(String query) {
+        // Implement keyword extraction logic (e.g., tokenization, stemming)
+        return Set.of(query.split("\\s+"));
+    }
+
+    // Index keywords for textual search
+    private void indexKeywords(Product product) {
+        for (String word : product.getName().split("\\s+")) {
+            keywordIndex.computeIfAbsent(word.toLowerCase(), k -> new HashSet<>()).add(product.getId());
+        }
+        for (String word : product.getDescription().split("\\s+")) {
+            keywordIndex.computeIfAbsent(word.toLowerCase(), k -> new HashSet<>()).add(product.getId());
+        }
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        // Create products
+        Product product1 = new Product("1", "Laptop", "High-performance laptop", 999.99, List.of("Electronics", "Computers"));
+        Product product2 = new Product("2", "Chair", "Comfortable office chair", 149.99, List.of("Furniture", "Office"));
+        Product product3 = new Product("3", "Phone", "Smartphone with advanced features", 699.99, List.of("Electronics", "Mobile"));
+
+        // Create product database
+        ProductDatabase database = new ProductDatabase();
+        database.addProduct(product1);
+        database.addProduct(product2);
+        database.addProduct(product3);
+
+        // Search products by category
+        System.out.println("Products in Electronics category:");
+        List<Product> electronicsProducts = database.searchByCategory("Electronics");
+        for (Product product : electronicsProducts) {
+            System.out.println(product);
+        }
+
+        // Textual search
+        System.out.println("\nProducts matching 'smartphone':");
+        List<Product> searchResults = database.searchByText("smartphone");
+        for (Product product : searchResults) {
+            System.out.println(product);
+        }
+    }
+}
